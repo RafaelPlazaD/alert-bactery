@@ -1,88 +1,98 @@
-//const child_process = require('child_process')
+const { exec, execSync } = require("child_process");
+const { promisify } = require("util");
+var player = require("play-sound")((opts = {}));
+const fs = require("fs");
+const path = require("path");
+const { stdout } = require("process");
+const execAsync = promisify(exec);
 
-//const command = 'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|time to empty|to full|percentage"'
-//const getBatteryStatus = () => {
-//  child_process.exec(command, (err, stdout, stderr) => {
-//    if (err) {
-//      console.error(err.code)
-//    } else {
-//      try {
-//        console.log(`Info batery ${stdout}`)
-//      } catch (e) {
-//        console.error(e)
-//      }
-//    }
-//  })
-//}
-//
-//getBatteryStatus()
-//
-const { ifError } = require('assert')
-const { spawn, exec} = require('child_process')
-const { stdout, stderr } = require('process')
+function syncFuntion() {
+  try {
+    let stdout = execSync(
+      'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percentage"',
+    );
 
-
-
-//function getBatterySpawn() {
-//  console.log('here from function ::')
-//  const upower = spawn('upower', [
-//    '-i',
-//    '/org/freedesktop/UPower/devices/battery_BAT0',
-//  ])
-//  const grep = spawn('grep', [
-//    '-E',
-//    '"state|percentage"'
-//  ])
-//
-//  upower.stderr.on('data', (data) => {
-//    console.error(`Upower Error ${data}`)
-//  })
-//
-//  upower.stdout.pipe(grep.stdin)
-//
-//  grep.stderr.on('data', (data) => {
-//    console.error(`Grep Error ${data}`)
-//  })
-//  console.log('end function ')
-// // grep.stdout.on('data', (data) => {
-//
-//
-// // })
-//  
-//
-//  //upower.stdout.on('data', (data) => {
-//  //  console.log(`Result of:\n${data}`)
-//  //})
-//}
-function showInfo() {
-  const upower = spawn('upower', [
-    '-i', 
-    '/org/freedesktop/UPower/devices/battery_BAT0',
-  ])
-
-  const grep = spawn('grep', [
-    '-E',
-    '"state|percentage"'
-  ])
-
-  upower.stdout.pipe(grep.stdin)
-
-  grep.stdout.on('data', (data) => {
-    console.log(`Result:\n${data}`)
-  })
-
+    console.log(`afther ${stdout}`);
+  } catch (err) {
+    console.error(`Error ${err.toString()}`);
+  }
+}
+async function execShowInfo() {
+  try {
+    const { stdout } = await execAsync(
+      'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percentage"',
+    );
+    return filterInformation(stdout);
+  } catch (error) {
+    console.error("Error executing command:", error);
+    return null;
+  }
 }
 
-//showInfo()
+function filterInformation(text) {
+  console.log("Filter function");
+  let info = {
+    state: "",
+    percentage: 0,
+  };
 
-function execShowInfo() {
-  exec('upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percentage"', (err, stdout, stderr) => {
-    if(err) {
-      console.error(`Error exec ${err}`)
+  const lines = text.trim().split("\n");
+  lines.forEach((line) => {
+    const [key, value] = line.split(":").map((item) => item.trim());
+    if (key === "state") {
+      info.state = value;
+    } else if (key === "percentage") {
+      info.percentage = parseInt(value);
     }
+  });
 
-    console.log(`${stdout}`)
-  })  
+  return info;
 }
 
-execShowInfo()
+async function checkBatteryStatus(threshold) {
+  const batteryInfo = await execShowInfo();
+  if (batteryInfo && batteryInfo.percentage > threshold) {
+    console.log(`¡Alerta! Batería baja: ${batteryInfo.percentage}%`);
+    // Aquí puedes agregar el código para emitir un sonido
+  }
+}
+
+// Ejemplo de uso
+const BATTERY_THRESHOLD = 20;
+const CHECK_INTERVAL = 60000; // 1 minuto
+
+//setInterval(() => {
+//  checkBatteryStatus(BATTERY_THRESHOLD);
+//}, CHECK_INTERVAL);
+//
+//// Ejecutar inmediatamente al inicio
+//checkBatteryStatus(BATTERY_THRESHOLD);
+let testFunction = async () => {
+  do {
+    const info = await execShowInfo();
+    const musicDir = "./media";
+    console.log("other ejecucion");
+    let resu = setTimeout(() => {
+      //  Obtener lista de canciones
+      const songs = fs
+        .readdirSync(musicDir)
+        .filter((file) => path.extname(file).toLowerCase() === ".mp3");
+      console.log("before while");
+      if (info.percentage > 20 && info.state === "discharging") {
+        const songPath = path.join(musicDir, songs[0]);
+        console.log(`Reproduciendo: ${songs[1]}`);
+
+        player.play(songPath, (err) => {
+          if (err) console.log(`Error al reproducir: ${err}`);
+        });
+      }
+      console.log("ejecucion interna");
+    }, 10000);
+    //
+    //
+    // console.log(`Info : ${batteryInfo.percentage}`)
+  } while (true);
+};
+//testFunction();
+syncFuntion();
+

@@ -61,12 +61,13 @@ function exeShowThen() {
   promise
     .then((result) => {
       info = filterInformation(result);
+
+      console.log(`Info :::: ${info.state}`);
     })
     .catch((error) => {
       console.error(error);
       return null;
     });
-  return info;
 }
 
 /**
@@ -107,5 +108,4 @@ function startPlay() {
 }
 //startPlay();
 //execShowInfo();
-let info = await exeShowThen();
-console.log(`Ready : ${info}`);
+exeShowThen();
