@@ -1,4 +1,4 @@
-![Logo](.media/deamon-image.jpeg)
+![Logo](./media/deamon-image.jpeg)
 
 # Alert Batery
 
