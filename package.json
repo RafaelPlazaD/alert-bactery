@@ -5,6 +5,9 @@
   "scripts": {
     "test": "echo \"ror: no test specified\" && exit 1"
   },
+  "bin": {
+    "alert-bactery": "./index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
