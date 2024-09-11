@@ -34,23 +34,47 @@ async function main() {
 //aux functions
 
 async function execShowInfo() {
-  exec(
+  let info = await exec(
     'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percentage"',
-    (err, stdout, stderr) => {
-      if (err) {
-        console.error(`Error exec ${err}`);
-      }
-      let filteredInfo = filterInformation(stdout);
-      console.log(filteredInfo);
-    },
   );
 
-  //  return filteredInfo;
+  info.stdout.on("data", (data) => {
+    info = filterInformation(data);
+  });
+  return info;
 }
+//  child.stdout.on("data", (data) => {
+//    info = data;
+//    console.log(`INFOR : ${data}`);
+//  });
+//  //  return filteredInfo;
+//  console.log(`--::::---   : ${info}`);
+//}
 
 function exeShowThen() {
-  let info;
-  let promise = new Promise((resolve, rejects) => {
+  do {
+    let info = filterInformation(result);
+    // Directorio donde se encuentran tus archivos de música
+    const musicDir = "./media";
+
+    // Obtener lista de canciones
+    const songs = fs
+      .readdirSync(musicDir)
+      .filter((file) => path.extname(file).toLowerCase() === ".mp3");
+    console.log("before while");
+    if (info.percentage > 20 && info.state === "discharging") {
+      const songPath = path.join(musicDir, songs[0]);
+      console.log(`Reproduciendo: ${songs[1]}`);
+
+      player.play(songPath, (err) => {
+        if (err) console.log(`Error al reproducir: ${err}`);
+      });
+    }
+  } while (true);
+}
+
+function searchInfoBactey() {
+  new Promise((resolve, rejects) => {
     exec(
       'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percenta"',
       (err, stdout, stderr) => {
@@ -58,16 +82,6 @@ function exeShowThen() {
       },
     );
   });
-  promise
-    .then((result) => {
-      info = filterInformation(result);
-
-      console.log(`Info :::: ${info.state}`);
-    })
-    .catch((error) => {
-      console.error(error);
-      return null;
-    });
 }
 
 /**
@@ -107,5 +121,6 @@ function startPlay() {
   });
 }
 //startPlay();
-//execShowInfo();
-exeShowThen();
+let vari = await execShowInfo();
+console.log(`Funtion ${vari}`);
+//exeShowThen();

@@ -1,10 +1,10 @@
-const { spawn } = require('child_process')
-const { exec } = require('child_process')
-const { stdout, stderr } = require('process')
+//const { spawn } = require('child_process')
+const { exec } = require("child_process");
+const { stdout, stderr } = require("process");
 //const child = spawn('find', ['.', '-type', 'f'])
 
 //child.on('exit', function(code, signal) {
-//  console.log(`child process exited whit  code : ${code} and 
+//  console.log(`child process exited whit  code : ${code} and
 //  signal : ${signal}`)
 //})
 
@@ -21,11 +21,11 @@ const { stdout, stderr } = require('process')
 //  console.log(`Number of lines ${data}`)
 //})
 
-exec('find . -type f | wc -l', (err, stdout, stderr) => {
+exec("find . -type f | wc -l", (err, stdout, stderr) => {
   if (err) {
-    console.error(`Exec erro: ${err}`)
-    return
+    console.error(`Exec erro: ${err}`);
+    return;
   }
 
-  console.log(`Number of file ${stdout}`)
-})
+  console.log(`Number of file ${stdout}`);
+});

@@ -6,13 +6,58 @@ const path = require("path");
 const { stdout } = require("process");
 const execAsync = promisify(exec);
 
-function syncFuntion() {
+function getInfoBatery() {
   try {
     let stdout = execSync(
       'upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|percentage"',
     );
 
-    console.log(`afther ${stdout}`);
+    let info = filterInformation("" + stdout);
+    return info;
+  } catch (err) {
+    console.error(err.toString());
+  }
+}
+async function syncFuntion() {
+  try {
+    const wait = (t) =>
+      new Promise((resolve, reject) => setTimeout(resolve, t));
+
+    do {
+      const musicDir = "./media";
+      let info = getInfoBatery();
+      //  get list of sounds
+      const songs = fs
+        .readdirSync(musicDir)
+        .filter((file) => path.extname(file).toLowerCase() === ".mp3");
+
+      if (info.percentage > 20 && info.state === "discharging") {
+        // const songPath = path.join(musicDir, songs[0]);
+        // console.log(`Reproduciendo: ${songs[1]}`);
+
+        // player.play(songPath, (err) => {
+        //   if (err) console.log(`Error al reproducir: ${err}`);
+        // });
+
+        //check is chargin
+
+        let isNotCharging = true;
+        do {
+          let info = getInfoBatery();
+
+          if (info.state === "charging") {
+            isNotCharging = false;
+          }
+
+          console.log("into loop intern");
+          await wait(5000);
+        } while (isNotCharging);
+      }
+
+      await wait(5000);
+
+      console.log(`afther ${JSON.stringify(info)}`);
+    } while (true);
   } catch (err) {
     console.error(`Error ${err.toString()}`);
   }
@@ -30,7 +75,6 @@ async function execShowInfo() {
 }
 
 function filterInformation(text) {
-  console.log("Filter function");
   let info = {
     state: "",
     percentage: 0,
@@ -72,22 +116,20 @@ let testFunction = async () => {
     const info = await execShowInfo();
     const musicDir = "./media";
     console.log("other ejecucion");
-    let resu = setTimeout(() => {
-      //  Obtener lista de canciones
-      const songs = fs
-        .readdirSync(musicDir)
-        .filter((file) => path.extname(file).toLowerCase() === ".mp3");
-      console.log("before while");
-      if (info.percentage > 20 && info.state === "discharging") {
-        const songPath = path.join(musicDir, songs[0]);
-        console.log(`Reproduciendo: ${songs[1]}`);
+    //  Obtener lista de canciones
+    const songs = fs
+      .readdirSync(musicDir)
+      .filter((file) => path.extname(file).toLowerCase() === ".mp3");
+    console.log("before while");
+    if (info.percentage > 20 && info.state === "discharging") {
+      const songPath = path.join(musicDir, songs[0]);
+      console.log(`Reproduciendo: ${songs[1]}`);
 
-        player.play(songPath, (err) => {
-          if (err) console.log(`Error al reproducir: ${err}`);
-        });
-      }
-      console.log("ejecucion interna");
-    }, 10000);
+      player.play(songPath, (err) => {
+        if (err) console.log(`Error al reproducir: ${err}`);
+      });
+    }
+    console.log("ejecucion interna");
     //
     //
     // console.log(`Info : ${batteryInfo.percentage}`)
