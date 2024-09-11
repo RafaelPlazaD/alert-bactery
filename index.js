@@ -5,6 +5,16 @@ const fs = require("fs");
 const path = require("path");
 const { stdout } = require("process");
 const execAsync = promisify(exec);
+// const local
+const DURANTIONSOUND = 40000;
+let counter = 0;
+const music = "./media/alarm.mp3";
+
+function execPlaySoun() {
+  return player.play(music, (err) => {
+    if (err) console.log(`Error al reproducir: ${err}`);
+  });
+}
 
 function getInfoBatery() {
   try {
@@ -18,43 +28,50 @@ function getInfoBatery() {
     console.error(err.toString());
   }
 }
+
 async function syncFuntion() {
   try {
     const wait = (t) =>
       new Promise((resolve, reject) => setTimeout(resolve, t));
 
     do {
-      const musicDir = "./media";
       let info = getInfoBatery();
       //  get list of sounds
-      const songs = fs
-        .readdirSync(musicDir)
-        .filter((file) => path.extname(file).toLowerCase() === ".mp3");
+      // const songs = fs
+      //   .readdirSync(music)
+      //   .filter((file) => path.extname(file).toLowerCase() === ".mp3");
 
-      if (info.percentage > 20 && info.state === "discharging") {
-        // const songPath = path.join(musicDir, songs[0]);
+      if (info.percentage < 82 && info.state === "discharging") {
+        // const songPath = path.join(music, songs[0]);
         // console.log(`Reproduciendo: ${songs[1]}`);
 
-        // player.play(songPath, (err) => {
-        //   if (err) console.log(`Error al reproducir: ${err}`);
-        // });
-
+        let audio = execPlaySoun();
         //check is chargin
 
         let isNotCharging = true;
+
         do {
           let info = getInfoBatery();
 
+          if (counter >= DURANTIONSOUND) {
+            audio.kill();
+            audio = execPlaySoun();
+            console.log("restar music");
+            counter = 0;
+          }
+
           if (info.state === "charging") {
             isNotCharging = false;
+            audio.kill();
           }
 
           console.log("into loop intern");
           await wait(5000);
+          counter += 5000;
         } while (isNotCharging);
       }
 
-      await wait(5000);
+      await wait(60000);
 
       console.log(`afther ${JSON.stringify(info)}`);
     } while (true);
@@ -114,15 +131,15 @@ const CHECK_INTERVAL = 60000; // 1 minuto
 let testFunction = async () => {
   do {
     const info = await execShowInfo();
-    const musicDir = "./media";
+    const music = "./media";
     console.log("other ejecucion");
     //  Obtener lista de canciones
     const songs = fs
-      .readdirSync(musicDir)
+      .readdirSync(music)
       .filter((file) => path.extname(file).toLowerCase() === ".mp3");
     console.log("before while");
     if (info.percentage > 20 && info.state === "discharging") {
-      const songPath = path.join(musicDir, songs[0]);
+      const songPath = path.join(music, songs[0]);
       console.log(`Reproduciendo: ${songs[1]}`);
 
       player.play(songPath, (err) => {
@@ -137,4 +154,3 @@ let testFunction = async () => {
 };
 //testFunction();
 syncFuntion();
-
